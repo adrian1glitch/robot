@@ -12,6 +12,8 @@
  * 
  */
 //#define MID_SPEED 100
+//APUNTES ADRI: Esto define la velocidad de los motores, en las líneas 294 a 297, se encuentra el código que hace que el bot se pare si detecta blanco, ahora mismo está comentado
+//Si quieres hacer que funcione parandose en el blanco se le quita el comentado y se comenta la función de arriba, que hace que vaya en reversa si no funciona
 #define MID_SPEED 120    
 #define HIGH_SPEED 120    
 #define LOW_SPEED 80    

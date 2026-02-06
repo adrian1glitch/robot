@@ -1,0 +1,154 @@
+/*
+ * Arduino Mecanum Line Follower - Smooth & Memory Version
+ */
+// --- CONFIGURACIÓN DE VELOCIDAD ---
+#define MAX_SPEED 120    // Velocidad base
+#define CURVE_SPEED 60   // Velocidad del motor interno en curvas suaves
+#define TURN_SPEED 100   
+#define ROTATE_SPEED 110 
+
+// --- PINES (Se mantienen igual) ---
+#define speedPinR 9 
+#define RightMotorDirPin1 22 
+#define RightMotorDirPin2 24 
+#define LeftMotorDirPin1 26 
+#define LeftMotorDirPin2 28 
+#define speedPinL 10 
+#define speedPinRB 11 
+#define RightMotorDirPin1B 5 
+#define RightMotorDirPin2B 6 
+#define LeftMotorDirPin1B 7 
+#define LeftMotorDirPin2B 8 
+#define speedPinLB 12 
+
+#define sensor1 A4
+#define sensor2 A3
+#define sensor3 A2
+#define sensor4 A1
+#define sensor5 A0
+
+// MEMORIA: -1 Izquierda, 1 Derecha, 0 Centro
+int lastPosition = 0; 
+
+void setup() {
+  init_GPIO();
+  Serial.begin(9600);
+}
+
+void loop() {
+  tracking_fluid();
+}
+
+void tracking_fluid() {
+  // Lectura de sensores (Ajustar '!' según tu tipo de sensor)
+  int s0 = !digitalRead(sensor1); 
+  int s1 = !digitalRead(sensor2);
+  int s2 = !digitalRead(sensor3); 
+  int s3 = !digitalRead(sensor4);
+  int s4 = !digitalRead(sensor5);
+
+  int sensorState = (s0 << 4) | (s1 << 3) | (s2 << 2) | (s3 << 1) | s4;
+
+  switch (sensorState) {
+    // CENTRO: Máxima fluidez
+    case 0b00100:
+    case 0b01110:
+      forward(MAX_SPEED, MAX_SPEED);
+      lastPosition = 0;
+      break;
+
+    // DESVIACIÓN LEVE A LA IZQUIERDA (Línea está en la derecha)
+    // En lugar de frenar un motor a 0, le damos un poco de velocidad para que no vibre
+    case 0b00110: 
+    case 0b00010:
+      forward(MAX_SPEED, CURVE_SPEED); 
+      lastPosition = 1; 
+      break;
+
+    // DESVIACIÓN LEVE A LA DERECHA (Línea está en la izquierda)
+    case 0b01100:
+    case 0b01000:
+      forward(CURVE_SPEED, MAX_SPEED); 
+      lastPosition = -1;
+      break;
+
+    // GIROS BRUSCOS (Se sale la línea por los extremos)
+    case 0b00011:
+    case 0b00001:
+      sharpRightTurn(TURN_SPEED, TURN_SPEED);
+      lastPosition = 1;
+      break;
+
+    case 0b11000:
+    case 0b10000:
+      sharpLeftTurn(TURN_SPEED, TURN_SPEED);
+      lastPosition = -1;
+      break;
+
+    // PERDIDO (00000): Aquí aplicamos la memoria de "Girar sobre el último lado"
+    case 0b00000:
+      if (lastPosition == -1) {
+        sharpLeftTurn(ROTATE_SPEED, ROTATE_SPEED);
+      } else if (lastPosition == 1) {
+        sharpRightTurn(ROTATE_SPEED, ROTATE_SPEED);
+      } else {
+        reverse(70); // Si no sabe dónde estaba, retrocede un poco
+      }
+      break;
+
+    default:
+      // Mantener último movimiento si la lectura es ruidosa
+      break;
+  }
+}
+
+// --- FUNCIONES DE MOTOR OPTIMIZADAS ---
+
+void forward(int speed_left, int speed_right) {
+  // Izquierda
+  digitalWrite(LeftMotorDirPin1, LOW); digitalWrite(LeftMotorDirPin2, HIGH); 
+  analogWrite(speedPinL, speed_left);
+  digitalWrite(LeftMotorDirPin1B, LOW); digitalWrite(LeftMotorDirPin2B, HIGH); 
+  analogWrite(speedPinLB, speed_left);
+  // Derecha
+  digitalWrite(RightMotorDirPin1, LOW); digitalWrite(RightMotorDirPin2, HIGH); 
+  analogWrite(speedPinR, speed_right);
+  digitalWrite(RightMotorDirPin1B, LOW); digitalWrite(RightMotorDirPin2B, HIGH); 
+  analogWrite(speedPinRB, speed_right);
+}
+
+void sharpRightTurn(int sl, int sr) {
+  digitalWrite(LeftMotorDirPin1, LOW); digitalWrite(LeftMotorDirPin2, HIGH); analogWrite(speedPinL, sl);
+  digitalWrite(LeftMotorDirPin1B, LOW); digitalWrite(LeftMotorDirPin2B, HIGH); analogWrite(speedPinLB, sl);
+  digitalWrite(RightMotorDirPin1, HIGH); digitalWrite(RightMotorDirPin2, LOW); analogWrite(speedPinR, sr);
+  digitalWrite(RightMotorDirPin1B, HIGH); digitalWrite(RightMotorDirPin2B, LOW); analogWrite(speedPinRB, sr);
+}
+
+void sharpLeftTurn(int sl, int sr) {
+  digitalWrite(LeftMotorDirPin1, HIGH); digitalWrite(LeftMotorDirPin2, LOW); analogWrite(speedPinL, sl);
+  digitalWrite(LeftMotorDirPin1B, HIGH); digitalWrite(LeftMotorDirPin2B, LOW); analogWrite(speedPinLB, sl);
+  digitalWrite(RightMotorDirPin1, LOW); digitalWrite(RightMotorDirPin2, HIGH); analogWrite(speedPinR, sr);
+  digitalWrite(RightMotorDirPin1B, LOW); digitalWrite(RightMotorDirPin2B, HIGH); analogWrite(speedPinRB, sr);
+}
+
+void reverse(int speed) {
+  digitalWrite(LeftMotorDirPin1, HIGH); digitalWrite(LeftMotorDirPin2, LOW);
+  digitalWrite(LeftMotorDirPin1B, HIGH); digitalWrite(LeftMotorDirPin2B, LOW);
+  digitalWrite(RightMotorDirPin1, HIGH); digitalWrite(RightMotorDirPin2, LOW);
+  digitalWrite(RightMotorDirPin1B, HIGH); digitalWrite(RightMotorDirPin2B, LOW);
+  analogWrite(speedPinL, speed); analogWrite(speedPinLB, speed);
+  analogWrite(speedPinR, speed); analogWrite(speedPinRB, speed);
+}
+
+void stop_bot() {
+  analogWrite(speedPinLB,0); analogWrite(speedPinRB,0);
+  analogWrite(speedPinL,0);  analogWrite(speedPinR,0);
+}
+
+void init_GPIO() {
+  pinMode(RightMotorDirPin1, OUTPUT); pinMode(RightMotorDirPin2, OUTPUT); pinMode(speedPinL, OUTPUT);  
+  pinMode(LeftMotorDirPin1, OUTPUT); pinMode(LeftMotorDirPin2, OUTPUT); pinMode(speedPinR, OUTPUT);
+  pinMode(RightMotorDirPin1B, OUTPUT); pinMode(RightMotorDirPin2B, OUTPUT); pinMode(speedPinLB, OUTPUT);  
+  pinMode(LeftMotorDirPin1B, OUTPUT); pinMode(LeftMotorDirPin2B, OUTPUT); pinMode(speedPinRB, OUTPUT);
+  pinMode(sensor1, INPUT); pinMode(sensor2, INPUT); pinMode(sensor3, INPUT); pinMode(sensor4, INPUT); pinMode(sensor5, INPUT);
+}

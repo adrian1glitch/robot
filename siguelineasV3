@@ -2,8 +2,8 @@
  * Arduino Mecanum Line Follower - Smooth & Memory Version
  */
 // --- CONFIGURACIÓN DE VELOCIDAD ---
-#define MAX_SPEED 120    // Velocidad base
-#define CURVE_SPEED 60   // Velocidad del motor interno en curvas suaves
+#define MAX_SPEED 255    // Velocidad base
+#define CURVE_SPEED 70   // Velocidad del motor interno en curvas suaves
 #define TURN_SPEED 100   
 #define ROTATE_SPEED 110 
 

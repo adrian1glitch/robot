@@ -68,4 +68,4 @@ El robot no tiene encoders, así que mide por tiempo: se calibró que avanza 1 c
 
 ---
 
-Adrián Nasri Escarti · [Portfolio y otros proyectos](https://github.com/adrian1glitch)
+Adrián Nasri Escarti · [Portfolio y otros proyectos](https://github.com/adriannasri)

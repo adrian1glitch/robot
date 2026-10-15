@@ -1,6 +1,6 @@
-# Robot Mini Sumo · Osoyoo M2 Mecanum
+# Robot ASTI Robotics Challenge · Osoyoo M2 Mecanum
 
-Programas en Arduino (C++) para un robot **Osoyoo M2** con ruedas mecanum, preparados para el **ASTI Robotics Challenge**. Incluye dos estrategias de mini sumo, un siguelíneas, trazado de figuras geométricas y control por WiFi.
+Programas en Arduino (C++) para un robot **Osoyoo M2** con ruedas mecanum, preparados para las pruebas del **ASTI Robotics Challenge**: mini sumo (dos versiones), siguelíneas y trazado de figuras geométricas. También incluye el control por WiFi.
 
 ## Hardware
 
